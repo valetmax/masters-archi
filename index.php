@@ -39,7 +39,7 @@ function isEmailValid(string $email): bool {
 function extractDomainFromEmail(string $email) {
   $emailParts = explode('@', $email);
   if ($emailParts === false || count($emailParts) !== 2) {
-    return false;
+    return null;
   }
   return $emailParts[1];
 }
@@ -58,7 +58,11 @@ function isSpam(string $domain, array $spamDomain): bool {
   return false;
 }
 
-
+/**
+ * 
+ *
+ * @return void
+ */
 function validateEmail() {
   $errorsMessages = [
     "SPAM_ERROR" => "Email is spam",
@@ -69,25 +73,23 @@ function validateEmail() {
   
   $email = getRequestParam(EMAIL_PARAM_NAME);
   $error = null;
-  if ($email) {
-    if (isEmailValid($email)) {
-      $domain = extractDomainFromEmail($email);
-      if ($domain) {
-        if (!isSpam($domain, SPAM_DOMAINS)) {
-          echo "Email is valid";
-        } else {
-          $error = $errorsMessages['SPAM_ERROR'];
-        }
-      } else {
-        $error = $errorsMessages['EXTRACT_DOMAIN_ERROR'];
-      }
-    } else {
-      $error = $errorsMessages['INVALID_EMAIL'];
-    }
-  } else {
-    $error = $errorsMessages['REQUEST_PARAM_ERROR'];
+  if (!$email) {
+    return $errorsMessages['REQUEST_PARAM_ERROR'];
   }
-  echo $error;
+
+  if (!isEmailValid($email)) {
+    return $errorsMessages['INVALID_EMAIL'];
+  }
+
+  $domain = extractDomainFromEmail($email);
+  if (!$domain) {
+    return $errorsMessages['EXTRACT_DOMAIN_ERROR'];
+  }
+
+  if (isSpam($domain, SPAM_DOMAINS)) {
+    return $errorsMessages['SPAM_ERROR'];
+  } 
+  return "Email is valid";
 }
 
-validateEmail();  
+echo validateEmail();  
